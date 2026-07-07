@@ -265,4 +265,37 @@ async def ingest_playlist(
         "message": "Playlist ingested successfully",
         "playlist_title": new_playlist.title,
         "total_videos_added": len(videos_to_insert)
-    }
+    }
+
+@app.get("/api/playlists")
+def get_playlists(session: Session = Depends(get_session)):
+    playlists = session.exec(select(Playlist).order_by(Playlist.created_at.desc())).all()
+    result = []
+    for p in playlists:
+        v_count = session.exec(select(Video).where(Video.playlist_id == p.id)).all()
+        p_dict = p.model_dump()
+        p_dict["video_count"] = len(v_count)
+        result.append(p_dict)
+    return result
+
+@app.get("/api/playlists/{playlist_id}/videos")
+def get_playlist_videos(
+    playlist_id: UUID, 
+    current_user: User = Depends(get_current_user), 
+    session: Session = Depends(get_session)
+):
+    videos = session.exec(select(Video).where(Video.playlist_id == playlist_id).order_by(Video.sequence_order)).all()
+    progress_records = session.exec(select(UserProgress).where(UserProgress.user_id == current_user.id)).all()
+    completed_video_ids = {p.video_id for p in progress_records if p.is_completed}
+    
+    result = []
+    for v in videos:
+        v_dict = v.model_dump()
+        v_dict["is_completed"] = v.id in completed_video_ids
+        result.append(v_dict)
+    return result
+
+@app.get("/api/users/me")
+def get_user_me(current_user: User = Depends(get_current_user)):
+    return current_user.model_dump()
+

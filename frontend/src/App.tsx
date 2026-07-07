@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
+import CoursePlayer from "./pages/CoursePlayer";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -30,6 +31,17 @@ function App() {
         element={
           token ? (
             <Dashboard />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/playlist/:id"
+        element={
+          token ? (
+            <CoursePlayer />
           ) : (
             <Navigate to="/login" replace />
           )
