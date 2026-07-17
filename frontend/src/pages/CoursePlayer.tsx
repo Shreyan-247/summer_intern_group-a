@@ -212,6 +212,20 @@ export default function CoursePlayer() {
     return () => clearInterval(interval);
   }, [playerReady, activeVideo, token, getCurrentTime, getDuration, seekTo, isPlaying]);
 
+  // Tab visibility tracker: Enforce active tab
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        pause();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [pause]);
+
 
   if (loading) {
     return (
@@ -297,10 +311,9 @@ export default function CoursePlayer() {
               )}
 
               {/* YouTube Player container */}
-              <div
-                id={YT_PLAYER_ID}
-                className={`w-full h-full ${showGate ? "invisible" : ""}`}
-              />
+              <div className={`w-full h-full ${showGate ? "invisible" : ""}`}>
+                <div id={YT_PLAYER_ID} className="w-full h-full" />
+              </div>
 
               {/* Attention Lost Overlay */}
               <AttentionOverlay visible={proctoring.attentionLost} />
